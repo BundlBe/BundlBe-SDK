@@ -24,7 +24,7 @@ Add the package in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/BundlBe/BundlBe-SDK", from: "1.0.1")
+    .package(url: "https://github.com/BundlBe/BundlBe-SDK", from: "1.1.0")
 ]
 ```
 
@@ -37,7 +37,7 @@ Or in Xcode:
 Add to your `Podfile`:
 
 ```ruby
-pod 'BundlBe', '~> 1.0.1'
+pod 'BundlBe', '~> 1.1.0'
 ```
 
 Then run:
@@ -50,41 +50,81 @@ pod install
 
 ## Usage
 
+To use `BundlBe` in your app, you need to handle **two simple scenarios**:
+
+- **Manual activation** - when the user enters an activation code  
+- **Automatic validation** - when the app launches  
+
+The SDK handles caching and network requests automatically.
+
+---
+
 ### 1. Login
 
-Call `login` when:
+The `login` method is used to verify the activation code and subscription status.
 
-* the user enters an activation code (manual activation),
-* the app launches (to validate subscription status).
+You should call `login` in two cases:
 
-**Logic:**
+- when the user **enters an activation code manually**
+- when the app **launches**, if the code was saved previously
 
-* If the last successful verification was **less than 24 hours ago** → cached result is returned immediately.
-* Otherwise → `/login` request is sent to the backend.
+#### Logic
 
-#### 1. Example: Manual activation
+- If the last successful verification was **less than 24 hours ago**,  
+  the cached result is returned immediately (no network request)
+- If more than 24 hours have passed, a `/login` request is sent to the backend
+
+---
+
+### 1.1 Manual activation (user enters a code)
+
+You must add your own UI (button or screen)  
+where the user can enter an activation code  
+(e.g. activation screen, settings, onboarding).
+
+After the user enters the code, you should:
+
+1. save the code (for example, in `UserDefaults`)
+2. call `BundlBe.login`
+
+**Example:**
 
 ```swift
 import BundlBe
 
-// Save the code after first activation
+// Code entered by the user
 let userCode = "USER_CODE"
+
+// Save the code for future automatic checks
 UserDefaults.standard.set(userCode, forKey: "USER_CODE")
 
-// Call login
+// Verify subscription
 BundlBe.login(
     code: userCode,
     appID: "APP_ID",
-    deviceID: "DEVICE_ID"
+    deviceID: UIDevice.current.identifierForVendor?.uuidString ?? ""
 ) { result in
     print("Login result:", result)
 }
 ```
 
-#### 2. Example: AppDelegate
+> The SDK does not manage UI - it only verifies the code and subscription status.
 
-Call `login` at startup if the activation code was previously saved (e.g. in `UserDefaults`).
-This ensures subscription status is checked automatically once per day.
+---
+
+### 1.2 Automatic check on app launch (AppDelegate)
+
+If the user has already activated the app before,  
+they should not be asked to enter the code again.
+
+To achieve this, on app launch you should:
+
+- check whether an activation code is saved
+- if it exists, call `login`
+
+It is recommended to do this in `AppDelegate`.
+
+**Example:**
 
 ```swift
 import BundlBe
@@ -100,7 +140,7 @@ func application(
             appID: "APP_ID",
             deviceID: UIDevice.current.identifierForVendor?.uuidString ?? ""
         ) { result in
-            print("Login result:", result)
+            print("Auto login result:", result)
         }
     }
 
@@ -108,11 +148,17 @@ func application(
 }
 ```
 
+This ensures that the subscription status is automatically validated  
+**no more than once every 24 hours**.
+
 ---
 
 ### 2. Logout
 
-Calls `/logout` to resets the suppress state.
+The `logout` method clears the current session  
+and resets the paywall suppression state.
+
+**Example:**
 
 ```swift
 BundlBe.logout(
@@ -133,7 +179,12 @@ BundlBe.logout(
 
 ### 3. Paywall Suppressor
 
-Check whether the paywall should be displayed:
+After calling `login`, the SDK automatically updates the paywall state.
+
+Use `isPaywallSuppressed` to decide  
+whether the paywall should be shown to the user.
+
+**Example:**
 
 ```swift
 if BundlBe.isPaywallSuppressed {

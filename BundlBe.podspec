@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'BundlBe'
-  s.version          = '1.0.1'
+  s.version          = '1.1.0'
   s.summary          = 'Lightweight iOS SDK for subscription activation and paywall management.'
   s.description      = 'BundlBe is a lightweight iOS SDK that provides Login, Logout, and Paywall Suppressor functions for subscription handling.'
   
