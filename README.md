@@ -57,6 +57,8 @@ To use `BundlBe` in your app, you need to handle **two simple scenarios**:
 
 The SDK handles caching and network requests automatically.
 
+**❗Apple may consider the display of any third‑party purchasing platforms as an attempt to redirect users, so we strongly recommend avoiding the mention of BundlBe platform name in UI.**
+
 ---
 
 ### 1. Login
@@ -78,9 +80,9 @@ You should call `login` in two cases:
 
 ### 1.1 Manual activation (user enters a code)
 
-You must add your own UI (button or screen)  
+You must add your own UI (a “Redeem code” button)  
 where the user can enter an activation code  
-(e.g. activation screen, settings, onboarding).
+(e.g. Activation screen, Settings, Onboarding).
 
 After the user enters the code, you should:
 
