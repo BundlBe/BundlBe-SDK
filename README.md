@@ -197,3 +197,8 @@ if BundlBe.isPaywallSuppressed {
 ```
 
 ---
+
+If you have any questions or need technical assistance, contact us at: 
+support@bundlbe.com
+
+---
